@@ -1,0 +1,16 @@
+{
+    "name": "Vue App v1.0 - JS",
+    "version": "1.0.0",
+    "main": "index.html",
+    "scripts": {
+      "watch": "sass scss/app.scss css/app.min.css --watch --style=compressed"
+    },
+    "author": "Your Name",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+      "bootstrap": "^5.3.3",
+      "sass": "^1.78.0"
+    }
+  }
+  
