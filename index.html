@@ -12,110 +12,31 @@
 
 <body>
 
-    <body>
-        <div id="app">
+    <body ref="body">
+        <div id="app" :class="darkModeClass">
             <!-- Main Navigation -->
-            <main-nav :tabs="tabs" :active-tab="activeTab" @tab-change="activeTab = $event"></main-nav>
+            <main-nav :tabs="tabs" :active-tab="activeTab" @tab-change="activeTab = $event" ref="mainNav"></main-nav>
 
             <!-- Content Container -->
             <div class="container mt-4">
                 <!-- Lists Tab -->
                 <list-component v-if="activeTab === 'lists'" :lists="lists" @add-list="addList"
                     @delete-list="deleteList" @view-list="viewList"></list-component>
-
+    
                 <!-- Recipes Tab -->
                 <recipe-component v-if="activeTab === 'recipes'" :recipes="recipes" :lists="lists"
                     @add-recipe="addRecipe" @delete-recipe="deleteRecipe" @view-recipe="viewRecipe"
                     @add-recipe-to-list="addRecipeToList"></recipe-component>
-
-                <!-- Settings Tab **********TODO: 
-
-         add functionality**********(Problem for future me)
-         create component
-         add dark mode to appearance using bootstrap overrides
-        <div class="tab-pane fade" id="settings">
-            <h2>Settings(WIP)</h2>
-            <div class="accordion" id="settingsAccordion">
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#accountSettings" aria-expanded="true">
-                            Account
-                        </button>
-                    </h2>
-                    <div id="accountSettings" class="accordion-collapse collapse show">
-                        <div class="accordion-body">
-                            <p>Create an account to save your lists.</p>
-                            <button class="btn btn-primary">Create an Account</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#notificationsSettings">
-                            Notifications
-                        </button>
-                    </h2>
-                    <div id="notificationsSettings" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <p>Notification settings.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#appearanceSettings">
-                            Appearance
-                        </button>
-                    </h2>
-                    <div id="appearanceSettings" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <p>Appearance settings.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#supportSettings">
-                            Support
-                        </button>
-                    </h2>
-                    <div id="supportSettings" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <p>Support settings.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#aboutSettings">
-                            About
-                        </button>
-                    </h2>
-                    <div id="aboutSettings" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <p>About settings.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-     -->
-
+    
+                <!-- Settings Tab -->
+                <settings-component v-if="activeTab === 'settings'"
+                    @toggle-dark-mode="toggleDarkMode"></settings-component>
+    
                 <!-- View List Modal -->
                 <view-list-modal v-if="showViewListModal" :current-list="currentList"
                     @close-modal="showViewListModal = false" @add-item-to-list="addItemToList"
                     @delete-item-from-list="deleteItemFromList"></view-list-modal>
-
+    
                 <!-- View Recipe Modal -->
                 <view-recipe-modal v-if="showViewRecipeModal" :current-recipe="currentRecipe"
                     @close-modal="showViewRecipeModal = false" @add-ingredient-to-recipe="addIngredientToRecipe"
@@ -123,15 +44,22 @@
             </div>
 
             <!-- Footer -->
-            <footer class="text-center py-3 mt-5" id="footer">
-                <p class="mb-0">Vue App v2.0</p>
+            <footer class="text-center py-3 mt-5" id="footer" ref="footer">
+                <p class="mb-0">Vue App v4.0</p>
             </footer>
         </div>
 
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-        <script src="main.js"></script>
+        <script src="js/FoodItem.js"></script>
+        <script src="js/Recipe.js"></script>
+        <script src="js/GroceryList.js"></script>
 
+        <!-- Main JavaScript File (defines window.app) -->
+        <script src="js/main.js"></script>
+
+        <!-- Component Files (after main.js to reference window.app) -->
+        <script src="components/SettingsComponent.js"></script>
         <script src="components/AppModal.js"></script>
         <script src="components/MainNav.js"></script>
         <script src="components/ListComponent.js"></script>
