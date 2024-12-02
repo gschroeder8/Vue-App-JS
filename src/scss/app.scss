@@ -1,0 +1,64 @@
+// Overrides
+$blue:    #007bee;
+$indigo:  #6610fe;
+$purple:  #6f42c1;
+$pink:    #e83e8c;
+$red:     #dc3545;
+$orange:  #fd7e14;
+$yellow:  #ffcc00;
+$green:   #28a745;
+$teal:    #20c997;
+$cyan:    #17a2b8;
+$moonstone: #46acc2ff;
+$berkeley-blue: #1d3557ff;
+$light-orange: #fcd0a1ff;
+$ecru: #e5c687ff;
+$beige: #EFF0D1;
+
+// Light Mode
+$primary: $ecru;
+$secondary: $moonstone;
+
+// Dark Mode
+$dark-primary: $ecru;
+$dark-secondary: $berkeley-blue;
+
+$btn-border-radius: 0.5rem;
+
+// Bootstrap
+@import "../node_modules/bootstrap/scss/bootstrap";
+
+// Custom styles
+body {
+  background-color: $beige;
+}
+
+body.dark-mode {
+  background-color: $light-orange;
+}
+
+#mainNav {
+  background-color: $secondary;
+}
+
+#mainNav.dark-mode {
+  background-color: $dark-secondary;
+}
+
+#footer {
+  background-color: $secondary;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+}
+
+#footer.dark-mode {
+  background-color: $dark-secondary;
+}
+
+#listImg {
+  width: 10%;
+  height: 10%;
+}
+

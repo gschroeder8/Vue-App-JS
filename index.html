@@ -11,73 +11,18 @@
 </head>
 
 <body>
+    <div id="app"></div>
 
-    <body ref="body">
-        <div id="app" :class="darkModeClass">
-            <!-- Main Navigation -->
-            <main-nav :tabs="tabs" :active-tab="activeTab" @tab-change="activeTab = $event" ref="mainNav"></main-nav>
+    <!-- Import Vue and JavaScript dependencies -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-            <!-- Content Container -->
-            <div class="container mt-4">
-                <!-- Lists Tab -->
-                <list-component v-if="activeTab === 'lists'" :lists="lists" @add-list="addList"
-                    @delete-list="deleteList" @view-list="viewList"></list-component>
-    
-                <!-- Recipes Tab -->
-                <recipe-component v-if="activeTab === 'recipes'" :recipes="recipes" :lists="lists"
-                    @add-recipe="addRecipe" @delete-recipe="deleteRecipe" @view-recipe="viewRecipe"
-                    @add-recipe-to-list="addRecipeToList"></recipe-component>
-    
-                <!-- Settings Tab -->
-                <settings-component v-if="activeTab === 'settings'"
-                    @toggle-dark-mode="toggleDarkMode"></settings-component>
-    
-                <!-- View List Modal -->
-                <view-list-modal v-if="showViewListModal" :current-list="currentList"
-                    @close-modal="showViewListModal = false" @add-item-to-list="addItemToList"
-                    @delete-item-from-list="deleteItemFromList"></view-list-modal>
-    
-                <!-- View Recipe Modal -->
-                <view-recipe-modal v-if="showViewRecipeModal" :current-recipe="currentRecipe"
-                    @close-modal="showViewRecipeModal = false" @add-ingredient-to-recipe="addIngredientToRecipe"
-                    @delete-ingredient-from-recipe="deleteIngredientFromRecipe"></view-recipe-modal>
-            </div>
+    <!-- Main JavaScript File -->
+    <script type="module" src="/src/main.js"></script>
 
-            <!-- Footer -->
-            <footer class="text-center py-3 mt-5" id="footer" ref="footer">
-                <p class="mb-0">Vue App v4.0</p>
-            </footer>
-        </div>
-
-        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-
-        <script src="js/FoodItem.js"></script>
-        <script src="js/Recipe.js"></script>
-        <script src="js/GroceryList.js"></script>
-
-        <!-- Main JavaScript File (defines window.app) -->
-        <script src="js/main.js"></script>
-
-        <!-- Component Files (after main.js to reference window.app) -->
-        <script src="components/SettingsComponent.js"></script>
-        <script src="components/AppModal.js"></script>
-        <script src="components/MainNav.js"></script>
-        <script src="components/ListComponent.js"></script>
-        <script src="components/ListItem.js"></script>
-        <script src="components/RecipeComponent.js"></script>
-        <script src="components/RecipeItem.js"></script>
-        <script src="components/ViewListModal.js"></script>
-        <script src="components/ViewRecipeModal.js"></script>
-
-        <script>
-            app.mount('#app');
-        </script>
-
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-            crossorigin="anonymous"></script>
-
-
-    </body>
+    <!-- Bootstrap JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
+    </script>
+</body>
 
 </html>
