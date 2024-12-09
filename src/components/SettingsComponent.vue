@@ -36,20 +36,6 @@
         </div>
       </div>
 
-      <!-- Support Settings -->
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="headingSupport">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#supportSettings" aria-expanded="false" aria-controls="supportSettings">
-            Support
-          </button>
-        </h2>
-        <div id="supportSettings" class="accordion-collapse collapse" aria-labelledby="headingSupport" data-bs-parent="#settingsAccordion">
-          <div class="accordion-body">
-            <p>Support settings.</p>
-          </div>
-        </div>
-      </div>
-
       <!-- About Settings -->
       <div class="accordion-item">
         <h2 class="accordion-header" id="headingAbout">

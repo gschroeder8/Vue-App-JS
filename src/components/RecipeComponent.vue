@@ -11,7 +11,7 @@
           <span>{{ recipe.name }}</span>
           <div>
             <button class="btn btn-link" @click="viewRecipe(recipe)">See Recipe</button>
-            <button class="btn btn-link" @click="addRecipeToList(recipe)">Add to List</button>
+            <button class="btn btn-link" @click="openAddToListModal(recipe)">Add to List</button>
             <button class="btn btn-link" @click="deleteRecipe(index)">Delete</button>
           </div>
         </div>
@@ -28,7 +28,7 @@
           </div>
           <div class="modal-body">
             <select v-model="recipeOption" class="form-select">
-              <option value="" disabled selected>Select Option</option>
+              <option value="" disabled>Select Option</option>
               <option value="manual">Add Recipe Manually</option>
               <option value="api">Add Recipe Using Existing Recipes</option>
             </select>
@@ -38,102 +38,96 @@
       </div>
     </div>
 
-<!-- Add Recipe Manually Modal -->
-<div v-if="showAddManualRecipeModal" class="modal fade show" tabindex="-1" style="display: block;">
+    <!-- Add Recipe Manually Modal -->
+    <add-manual-recipe
+      v-if="showAddManualRecipeModal"
+      @add-recipe="addRecipe"
+      @close-modal="closeAddManualRecipeModal"
+    ></add-manual-recipe>
+
+    <!-- Add Recipe Using API Modal -->
+    <add-api-recipe
+      v-if="showApiRecipeModal"
+      @add-recipe="addRecipe"
+      @close-modal="closeApiRecipeModal"
+    ></add-api-recipe>
+
+    <!-- See Manual Recipe Modal -->
+    <see-manual-recipe
+      v-if="showViewManualRecipeModal"
+      :current-recipe="currentRecipe"
+      @update-recipe="updateRecipe"
+      @close-modal="closeViewManualRecipeModal"
+    ></see-manual-recipe>
+
+    <!-- See API Recipe Modal -->
+    <see-api-recipe
+      v-if="showViewApiRecipeModal"
+      :current-recipe="currentRecipe"
+      @update-recipe="updateRecipe"
+      @close-modal="closeViewApiRecipeModal"
+    ></see-api-recipe>
+
+    <!-- Add to List Modal -->
+    <div v-if="showAddToListModal" class="modal fade show" tabindex="-1" style="display: block;">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Create New Recipe Manually</h5>
-            <button type="button" class="btn-close" @click="closeAddManualRecipeModal"></button>
+            <h5 class="modal-title">Add to List</h5>
+            <button type="button" class="btn-close" @click="closeAddToListModal"></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="submitManualRecipe">
-              <div class="mb-3">
-                <label for="recipeName" class="form-label">Recipe Name</label>
-                <input type="text" v-model="newRecipeName" class="form-control" id="recipeName" required>
-              </div>
-              <div class="mb-3">
-                <label for="recipeDirections" class="form-label">Directions</label>
-                <textarea v-model="newRecipeDirections" class="form-control" id="recipeDirections" rows="3" required></textarea>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Add Ingredients</label>
-                <div class="d-flex mb-2">
-                  <input type="text" v-model="newIngredientName" class="form-control me-2" placeholder="Ingredient Name">
-                  <select v-model="newIngredientCategory" class="form-select me-2">
-                    <option value="" disabled selected>Select Category</option>
-                    <option value="Meat">Meat</option>
-                    <option value="Dairy">Dairy</option>
-                    <option value="Produce">Produce</option>
-                    <option value="Snacks">Snacks</option>
-                    <option value="Beverages">Beverages</option>
-                    <option value="Seafood">Seafood</option>
-                    <option value="Bakery">Bakery</option>
-                    <option value="Miscellaneous">Miscellaneous</option>
-                  </select>
-                  <button type="button" class="btn btn-secondary" @click="addIngredientToNewRecipe">Add Ingredient</button>
-                </div>
-                <ul class="list-group">
-                  <li class="list-group-item d-flex justify-content-between align-items-center" v-for="(ingredient, index) in newRecipeIngredients" :key="index">
-                    <span>{{ ingredient.name }} ({{ ingredient.category }})</span>
-                    <button type="button" class="btn btn-sm btn-danger" @click="deleteIngredientFromNewRecipe(index)">Delete</button>
-                  </li>
-                </ul>
-              </div>
-              <button type="submit" class="btn btn-primary">Create Recipe</button>
-            </form>
+            <select v-model="selectedList" class="form-select">
+              <option value="" disabled>Select a List</option>
+              <option v-for="list in lists" :key="list.name" :value="list">{{ list.name }}</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" @click="addRecipeToSelectedList">Add</button>
           </div>
         </div>
       </div>
     </div>
-
-
-    <!-- Add API Recipe Modal -->
-    <add-api-recipe v-if="showApiRecipeModal" @add-recipe="addRecipe" @close-modal="closeApiRecipeModal"></add-api-recipe>
-
-    <!-- View API Recipe Modal -->
-    <see-api-recipe v-if="showViewApiRecipeModal" :current-recipe="currentRecipe" @update-recipe="updateRecipe" @close-modal="closeViewApiRecipeModal"></see-api-recipe>
   </div>
 </template>
 
 <script>
-import AddApiRecipe from '@/components/AddApiRecipe.vue';
-import SeeApiRecipe from '@/components/SeeApiRecipe.vue';
-import FoodItem from '@/models/FoodItem.js';
-import Recipe from '@/models/Recipe.js';
+import AddManualRecipe from "@/components/AddManualRecipe.vue";
+import AddApiRecipe from "@/components/AddApiRecipe.vue";
+import SeeManualRecipe from "@/components/SeeManualRecipe.vue";
+import SeeApiRecipe from "@/components/SeeApiRecipe.vue";
 
 export default {
-  name: 'RecipeComponent',
+  name: "RecipeComponent",
   components: {
+    AddManualRecipe,
     AddApiRecipe,
+    SeeManualRecipe,
     SeeApiRecipe,
   },
   props: {
     recipes: {
       type: Array,
       required: true,
-      default: () => [],
     },
     lists: {
       type: Array,
       required: true,
-      default: () => [],
     },
   },
   data() {
     return {
-      searchRecipesQuery: '',
+      searchRecipesQuery: "",
       showRecipeOptionModal: false,
       showAddManualRecipeModal: false,
       showApiRecipeModal: false,
+      showViewManualRecipeModal: false,
       showViewApiRecipeModal: false,
-      recipeOption: '',
-      newRecipeName: '',
-      newRecipeDirections: '',
-      newIngredientName: '',
-      newIngredientCategory: '',
-      newRecipeIngredients: [],
+      showAddToListModal: false,
+      recipeOption: "",
       currentRecipe: null,
+      selectedRecipe: null,
+      selectedList: null,
     };
   },
   computed: {
@@ -144,9 +138,9 @@ export default {
   },
   methods: {
     selectRecipeOption() {
-      if (this.recipeOption === 'manual') {
+      if (this.recipeOption === "manual") {
         this.showAddManualRecipeModal = true;
-      } else if (this.recipeOption === 'api') {
+      } else if (this.recipeOption === "api") {
         this.showApiRecipeModal = true;
       }
       this.showRecipeOptionModal = false;
@@ -160,55 +154,59 @@ export default {
     closeApiRecipeModal() {
       this.showApiRecipeModal = false;
     },
-    closeViewApiRecipeModal() {
-      this.showViewApiRecipeModal = false;
-    },
-    addRecipe(newRecipe) {
-      if (newRecipe) {
-        this.$emit('add-recipe', newRecipe);
-        this.showApiRecipeModal = false; // Close the API modal if it was an API-added recipe
-      }
-    },
-    submitManualRecipe() {
-      if (this.newRecipeName.trim() && this.newRecipeDirections.trim()) {
-        const newRecipe = new Recipe(
-          this.newRecipeName,
-          this.newRecipeIngredients,
-          this.newRecipeDirections
-        );
-        this.$emit('add-recipe', newRecipe);
-        this.resetManualRecipeForm();
-        this.closeAddManualRecipeModal();
-      }
-    },
-    resetManualRecipeForm() {
-      this.newRecipeName = '';
-      this.newRecipeDirections = '';
-      this.newIngredientName = '';
-      this.newIngredientCategory = '';
-      this.newRecipeIngredients = [];
-    },
     viewRecipe(recipe) {
       this.currentRecipe = { ...recipe };
       if (recipe.isFromApi) {
         this.showViewApiRecipeModal = true;
       } else {
-        // handle other recipe viewing if necessary
+        this.showViewManualRecipeModal = true;
       }
+    },
+    closeViewManualRecipeModal() {
+      this.showViewManualRecipeModal = false;
+    },
+    closeViewApiRecipeModal() {
+      this.showViewApiRecipeModal = false;
+    },
+    addRecipe(newRecipe) {
+      if (!newRecipe.name || !newRecipe.ingredients) {
+        alert("Invalid recipe data. Please check the details and try again.");
+        return;
+      }
+      this.recipes.push(newRecipe);
     },
     updateRecipe(updatedRecipe) {
-      const index = this.recipes.findIndex((recipe) => recipe.name === updatedRecipe.name);
+      const index = this.recipes.findIndex((r) => r.name === updatedRecipe.name);
       if (index !== -1) {
-        this.$emit('update-recipe', index, updatedRecipe);
-        this.showViewApiRecipeModal = false;
+        this.recipes.splice(index, 1, updatedRecipe);
       }
     },
-    addRecipeToList(recipe) {
-      this.$emit('add-recipe-to-list', recipe);
+    openAddToListModal(recipe) {
+      this.selectedRecipe = recipe;
+      this.showAddToListModal = true;
+    },
+    closeAddToListModal() {
+      this.showAddToListModal = false;
+      this.selectedRecipe = null;
+      this.selectedList = null;
+    },
+    addRecipeToSelectedList() {
+      if (this.selectedList && this.selectedRecipe) {
+        const list = this.selectedList;
+        this.selectedRecipe.ingredients.forEach((ingredient) => {
+          if (!list.items.some((item) => item.name === ingredient.name)) {
+            list.items.push({ name: ingredient.name, category: ingredient.category || "Miscellaneous" });
+          }
+        });
+        alert(`"${this.selectedRecipe.name}" has been added to "${list.name}".`);
+        this.closeAddToListModal();
+      } else {
+        alert("Please select a list.");
+      }
     },
     deleteRecipe(index) {
-      if (confirm('Are you sure you want to delete this recipe?')) {
-        this.$emit('delete-recipe', index);
+      if (confirm("Are you sure you want to delete this recipe?")) {
+        this.recipes.splice(index, 1);
       }
     },
   },
