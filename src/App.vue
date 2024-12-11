@@ -42,17 +42,7 @@
         </p>
 
         <!-- Settings Tab -->
-        <settings-component v-if="activeTab === 'settings'" :login="login" :logout="logout"
-          :auth-user="authUser"></settings-component>
-
-        <!-- Add API Recipe Modal -->
-        <add-api-recipe v-if="showApiRecipeModal" :api-key="apiKey" :user-id="authUser.id" @add-recipe="addRecipe"
-          @close-modal="closeApiRecipeModal" />
-
-        <!-- View Recipe Modal -->
-        <view-recipe-modal v-if="showViewRecipeModal" :current-recipe="currentRecipe"
-          @close-modal="closeViewRecipeModal" @add-ingredient-to-recipe="addIngredientToRecipe"
-          @delete-ingredient-from-recipe="deleteIngredientFromRecipe"></view-recipe-modal>
+        <settings-component v-if="activeTab === 'settings'" :logout="logout" :auth-user="authUser"></settings-component>
       </div>
 
       <!-- Footer -->
@@ -68,7 +58,7 @@ import MainNav from "@/components/MainNav.vue";
 import ListComponent from "@/components/ListComponent.vue";
 import RecipeComponent from "@/components/RecipeComponent.vue";
 import SettingsComponent from "@/components/SettingsComponent.vue";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, db } from "@/models/firebase.js";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -114,6 +104,21 @@ export default {
     switchTab(tabId) {
       this.activeTab = tabId;
     },
+    async login() {
+      const provider = new GoogleAuthProvider();
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        this.authUser = {
+          id: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+        };
+        this.fetchUserData();
+      } catch (error) {
+        console.error("Error during login:", error);
+      }
+    },
     async fetchUserData() {
       if (!this.authUser?.id) return;
 
@@ -130,18 +135,6 @@ export default {
         this.lists = [];
       }
       this.loading = false;
-    },
-    addList(newList) {
-      this.lists.push(newList);
-      this.updateUserLists();
-    },
-    deleteList(index) {
-      this.lists.splice(index, 1);
-      this.updateUserLists();
-    },
-    addRecipe(newRecipe) {
-      this.recipes.push(newRecipe);
-      this.updateUserRecipes();
     },
     async updateUserLists() {
       if (!this.authUser?.id) return;
