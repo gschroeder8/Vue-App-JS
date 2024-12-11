@@ -11,24 +11,28 @@
 
 <script>
 export default {
-  name: 'RecipeItem',
+  name: "RecipeItem",
   props: {
-    recipe: Object,
-    index: Number
+    recipe: {
+      type: Object,
+      required: true,
+    },
+    index: {
+      type: Number,
+      required: true,
+    },
   },
   methods: {
     viewRecipe() {
-      this.$emit('view-recipe', this.recipe);
+      this.$emit("view-recipe", this.recipe);
     },
     addRecipeToList() {
-      this.$emit('add-recipe-to-list', this.recipe);
+      this.$emit("add-recipe-to-list", this.recipe);
     },
     deleteRecipe() {
-      this.$emit('delete-recipe', this.index);
-    }
-  }
+      this.$emit("delete-recipe", this.index);
+    },
+  },
 };
-</script>
 
-<style scoped>
-</style>
+</script>

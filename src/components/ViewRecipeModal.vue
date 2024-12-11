@@ -8,7 +8,8 @@
         </div>
         <div class="modal-body">
           <h6>Ingredients:</h6>
-          <div v-for="(ingredient, index) in currentRecipe.ingredients" :key="index" class="d-flex align-items-center mb-2">
+          <div v-for="(ingredient, index) in currentRecipe.ingredients" :key="index"
+            class="d-flex align-items-center mb-2">
             <input type="text" v-model="ingredient.name" class="form-control me-2" placeholder="Ingredient Name">
             <select v-model="ingredient.category" class="form-select me-2">
               <option value="" disabled>Select Category</option>
@@ -22,7 +23,7 @@
             <button class="btn btn-sm btn-danger" @click="deleteIngredient(index)">Delete</button>
           </div>
           <button type="button" class="btn btn-secondary mb-3" @click="addIngredient">Add Ingredient</button>
-          
+
           <h6>Instructions:</h6>
           <textarea v-model="currentRecipe.instructions" class="form-control" rows="4"></textarea>
         </div>
@@ -32,29 +33,29 @@
 </template>
 
 <script>
-import FoodItem from '@/models/FoodItem.js';
+import FoodItem from "@/models/FoodItem.js";
 
 export default {
-  name: 'ViewRecipeModal',
+  name: "ViewRecipeModal",
   props: {
     currentRecipe: {
       type: Object,
       required: true,
-    }
+    },
   },
   methods: {
     addIngredient() {
-      this.currentRecipe.ingredients.push(new FoodItem('', ''));
+      this.currentRecipe.ingredients.push(new FoodItem("", ""));
     },
     deleteIngredient(index) {
       this.currentRecipe.ingredients.splice(index, 1);
     },
     closeModal() {
-      this.$emit('close-modal');
-    }
-  }
+      this.$emit("close-modal");
+    },
+  },
 };
+
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

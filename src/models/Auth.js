@@ -1,74 +1,168 @@
-import { auth, authProvider, signInWithPopup, db } from "@/models/firebase";
-import GroceryList from "@/models/GroceryList";
-import Recipe from "@/models/Recipe";
+import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
+import { auth, authProvider, db } from "@/models/firebase.js";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import GroceryList from "@/models/GroceryList.js";
+import ManualRecipe from "@/models/ManualRecipe.js";
+import APIRecipe from "@/models/APIRecipe.js";
+import FoodItem from "@/models/FoodItem.js";
 
 export default class Auth {
+  static _instance;
+  user = null;
+  lists = [];
+  recipes = [];
+
   constructor() {
-    this.user = null;
-    this.lists = [];
-    this.recipes = [];
+    if (!Auth._instance) {
+      Auth._instance = this;
+      this._startSession();
+    }
+    return Auth._instance;
   }
 
-  async login() {
-    try {
-      const result = await signInWithPopup(auth, authProvider);
-      this.user = result.user;
-      await this._startSession();
-    } catch (error) {
-      console.error("Login error:", error);
-    }
+  login() {
+    return signInWithPopup(auth, authProvider)
+      .then((result) => {
+        this.user = {
+          id: result.user.uid,
+          displayName: result.user.displayName,
+          email: result.user.email,
+        };
+        console.log("User logged in:", this.user);
+        this._initializeUserData();
+        this._syncUserData();
+      })
+      .catch((error) => {
+        console.error("Login failed:", error);
+      });
   }
 
   async logout() {
     try {
-      await auth.signOut();
-      this.user = null;
-      this.lists = [];
+      await signOut(auth);
+      this.authUser = null; // Clear the user from the app state
+      this.lists = []; // Reset any user-specific data
       this.recipes = [];
+      console.log("User logged out successfully.");
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Error during logout:", error);
     }
   }
 
-  async _startSession() {
+  _startSession() {
+    onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        this.user = {
+          id: firebaseUser.uid,
+          displayName: firebaseUser.displayName,
+          email: firebaseUser.email,
+        };
+        console.log("Session started for:", this.user);
+        this._initializeUserData();
+        this._syncUserData();
+      } else {
+        console.log("No user signed in.");
+        this.user = null;
+      }
+    });
+  }
+
+  _initializeUserData() {
     if (!this.user) return;
 
-    const userDoc = doc(db, "users", this.user.uid);
-    const docSnap = await getDoc(userDoc);
-
-    if (!docSnap.exists()) {
-      await setDoc(userDoc, { lists: [], recipes: [] });
-    } else {
-      const data = docSnap.data();
-      this.lists = data.lists.map((list) => GroceryList.fromObject(list));
-      this.recipes = data.recipes.map((recipe) => Recipe.fromObject(recipe));
-    }
+    const userDocRef = doc(db, "users", this.user.id);
+    getDoc(userDocRef).then((docSnapshot) => {
+      if (!docSnapshot.exists()) {
+        console.log("Initializing new user document.");
+        setDoc(userDocRef, { lists: [], recipes: [] })
+          .then(() => console.log("User document initialized."))
+          .catch((error) => console.error("Failed to initialize user document:", error));
+      }
+    });
   }
 
-  async saveData(key, data) {
-    const userDoc = doc(db, "users", this.user.uid);
-    const payload = { [key]: data.map((item) => item.toObject()) };
-    await updateDoc(userDoc, payload);
+  _syncUserData() {
+    if (!this.user) return;
+
+    const userDocRef = doc(db, "users", this.user.id);
+
+    getDoc(userDocRef)
+      .then((docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data();
+          this.lists = data.lists.map(
+            (list) =>
+              new GroceryList(
+                list.name,
+                list.items.map((item) => new FoodItem(item.name, item.category))
+              )
+          );
+          this.recipes = data.recipes.map((recipe) =>
+            recipe.isFromApi
+              ? new APIRecipe(
+                  recipe.name,
+                  recipe.ingredients.map((ingredient) => new FoodItem(ingredient.name, ingredient.category)),
+                  recipe.instructions,
+                  recipe.apiId
+                )
+              : new ManualRecipe(
+                  recipe.name,
+                  recipe.ingredients.map((ingredient) => new FoodItem(ingredient.name, ingredient.category)),
+                  recipe.instructions
+                )
+          );
+          console.log("User data synced:", data);
+        } else {
+          console.log("No user data found.");
+          this.lists = [];
+          this.recipes = [];
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to sync user data:", error);
+      });
   }
 
-  addList(list) {
-    this.lists.push(list);
-    this.saveData("lists", this.lists);
+  saveData() {
+    if (!this.user) return;
+
+    const userDocRef = doc(db, "users", this.user.id);
+    const userData = {
+      lists: this.lists.map((list) => ({
+        name: list.name,
+        items: list.items.map((item) => ({
+          name: item.name,
+          category: item.category,
+        })),
+      })),
+      recipes: this.recipes.map((recipe) => recipe.toObject()),
+    };
+
+    setDoc(userDocRef, userData, { merge: true })
+      .then(() => console.log("User data saved successfully."))
+      .catch((error) => {
+        console.error("Failed to save user data:", error);
+      });
   }
 
-  addRecipe(recipe) {
-    this.recipes.push(recipe);
-    this.saveData("recipes", this.recipes);
+  addList(newList) {
+    this.lists.push(newList);
+    this.saveData();
   }
 
   deleteList(index) {
     this.lists.splice(index, 1);
-    this.saveData("lists", this.lists);
+    this.saveData();
+  }
+
+  addRecipe(newRecipe) {
+    this.recipes.push(newRecipe);
+    this.saveData();
   }
 
   deleteRecipe(index) {
     this.recipes.splice(index, 1);
-    this.saveData("recipes", this.recipes);
+    this.saveData();
   }
 }

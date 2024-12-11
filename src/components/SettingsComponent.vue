@@ -23,14 +23,18 @@
           data-bs-parent="#settingsAccordion"
         >
           <div class="accordion-body d-block">
-            <p><strong>Logged in as:</strong> {{ authUser.email }}</p>
-            <p v-if="authUser">
-            </p>
+            <p><strong>Logged in as:</strong> {{ authUser?.email || "Guest" }}</p>
+            <p v-if="authUser" class="text-muted">You are logged in.</p>
             <p v-else class="text-muted">No user is currently logged in.</p>
-            <button class="btn btn-secondary mb-2 d-block me-2" @click="login">Login With Google</button>
-            <form>
-            <button v-if="authUser" class="btn btn-danger d-block" @click="logout">Logout</button>
-          </form>
+            <form @submit.prevent="logout">
+              <button
+                v-if="authUser"
+                type="submit"
+                class="btn btn-danger d-block"
+              >
+                Logout
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -58,7 +62,12 @@
           <div class="accordion-body">
             <p>If you have any questions or need support, reach out to us:</p>
             <ul>
-              <li>Email: <a href="mailto:gschroeder8@my.wctc.edu">gschroeder8@my.wctc.edu</a></li>
+              <li>
+                Email:
+                <a href="mailto:gschroeder8@my.wctc.edu"
+                  >gschroeder8@my.wctc.edu</a
+                >
+              </li>
             </ul>
           </div>
         </div>
@@ -86,8 +95,10 @@
         >
           <div class="accordion-body">
             <p>
-              <strong>Pantry Pal</strong> helps you manage your recipes and grocery lists with ease. This application is currently in testing
-              phases. If there are any bugs or suggestions, please send a message to the email listed in the "Contact Us" tab.
+              <strong>Pantry Pal</strong> helps you manage your recipes and grocery
+              lists with ease. This application is currently in testing phases.
+              If there are any bugs or suggestions, please send a message to the
+              email listed in the "Contact Us" tab.
             </p>
           </div>
         </div>
@@ -100,10 +111,13 @@
 export default {
   name: "SettingsComponent",
   props: {
-    login: { type: Function, required: true }, // Google login function
-    logout: { type: Function, required: true }, // Logout function
-    authUser: { type: Object, default: null }, // User object
-  },
+  login: { type: Function, required: true },
+  logout: { type: Function, required: true },
+  authUser: { type: Object, default: null },
+},
+created() {
+  console.log("Logout function:", this.logout);
+}
 };
 </script>
 

@@ -16,7 +16,7 @@
 
     <!-- Welcome Screen -->
     <div v-else-if="!authUser || !authUser.id" class="text-center my-5">
-      <h1>Welcome to Pantry Pal</h1>
+      <h1>Welcome to Pantry Pal!</h1>
       <p>Please log in to access your recipes and grocery lists.</p>
       <button class="btn btn-primary" @click="login">Login with Google</button>
     </div>
@@ -29,61 +29,29 @@
       <!-- Content Container -->
       <div class="container mt-4">
         <!-- Lists Tab -->
-        <list-component
-          v-if="activeTab === 'lists'"
-          :lists="lists"
-          @add-list="addList"
-          @delete-list="deleteList"
-          @view-list="viewList"
-        ></list-component>
+        <list-component v-if="activeTab === 'lists'" :lists="lists" @add-list="addList" @delete-list="deleteList"
+          @view-list="viewList">
+        </list-component>
         <p v-if="activeTab === 'lists' && lists.length === 0" class="text-center text-muted">
           No lists created. Start by adding your first list!
         </p>
 
         <!-- Recipes Tab -->
-        <recipe-component
-          v-if="activeTab === 'recipes'"
-          :recipes="recipes"
-          :lists="lists"
-          :api-key="apiKey"
-          @add-recipe="addRecipe"
-          @delete-recipe="deleteRecipe"
-          @view-recipe="viewRecipe"
-        ></recipe-component>
+        <recipe-component v-if="activeTab === 'recipes'" :recipes="recipes" :lists="lists" :user-id="authUser?.id"
+          :apiKey="apiKey" @add-recipe="addRecipe" @refresh-data="fetchUserData">
+        </recipe-component>
         <p v-if="activeTab === 'recipes' && recipes.length === 0" class="text-center text-muted">
           No recipes added. Start by creating your first recipe!
         </p>
 
         <!-- Settings Tab -->
-        <settings-component
-          v-if="activeTab === 'settings'"
-          :login="login"
-          :logout="logout"
-          :auth-user="authUser"
-        ></settings-component>
-
-        <!-- View List Modal -->
-        <view-list-modal
-          v-if="showViewListModal"
-          :current-list="currentList"
-          @close-modal="closeViewListModal"
-          @add-item-to-list="addItemToCurrentList"
-          @delete-item-from-list="deleteItemFromCurrentList"
-        ></view-list-modal>
-
-        <!-- View Recipe Modal -->
-        <view-recipe-modal
-          v-if="showViewRecipeModal"
-          :current-recipe="currentRecipe"
-          @close-modal="closeViewRecipeModal"
-          @add-ingredient-to-recipe="addIngredientToRecipe"
-          @delete-ingredient-from-recipe="deleteIngredientFromRecipe"
-        ></view-recipe-modal>
+        <settings-component v-if="activeTab === 'settings'" :login="login" :logout="logout" :auth-user="authUser">
+        </settings-component>
       </div>
 
       <!-- Footer -->
       <footer class="text-center py-3 mt-5" id="footer">
-        <p class="mb-0">&copy; 2024 Pantry Pal - Manage Your Recipes and Lists</p>
+        <p class="mb-0">&copy;Pantry Pal 2024</p>
       </footer>
     </div>
   </div>
@@ -94,15 +62,9 @@ import MainNav from "@/components/MainNav.vue";
 import ListComponent from "@/components/ListComponent.vue";
 import RecipeComponent from "@/components/RecipeComponent.vue";
 import SettingsComponent from "@/components/SettingsComponent.vue";
-import ViewListModal from "@/components/ViewListModal.vue";
-import ViewRecipeModal from "@/components/ViewRecipeModal.vue";
-import AddApiRecipe from "@/components/AddApiRecipe.vue";
-import AddManualRecipe from "@/components/AddManualRecipe.vue";
-import SeeManualRecipe from "@/components/SeeManualRecipe.vue";
-import GroceryList from "@/models/GroceryList.js";
-import FoodItem from "@/models/FoodItem.js";
-import Recipe from "@/models/Recipe.js";
-import Auth from "@/models/Auth.js";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/models/firebase.js";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default {
   components: {
@@ -110,16 +72,13 @@ export default {
     ListComponent,
     RecipeComponent,
     SettingsComponent,
-    ViewListModal,
-    ViewRecipeModal,
-    AddApiRecipe,
-    AddManualRecipe,
-    SeeManualRecipe,
   },
   data() {
     return {
-      auth: new Auth(),
       authUser: null,
+      recipes: [],
+      lists: [],
+      apiKey: "1220a6ebd1cf4ccf9c6bd451a882b6ea", // API key for Spoonacular
       loading: true,
       activeTab: "lists",
       tabs: [
@@ -127,119 +86,64 @@ export default {
         { id: "recipes", label: "Recipes" },
         { id: "settings", label: "Settings" },
       ],
-      apiKey: "1220a6ebd1cf4ccf9c6bd451a882b6ea",
-      lists: [],
-      recipes: [],
-      currentList: null,
-      currentRecipe: null,
-      showViewListModal: false,
-      showViewRecipeModal: false,
     };
+  },
+  created() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        this.authUser = {
+          id: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+        };
+        this.fetchUserData();
+      } else {
+        this.authUser = null;
+        this.recipes = [];
+        this.lists = [];
+        this.loading = false;
+      }
+    });
   },
   methods: {
     login() {
-      this.auth.login().then(() => {
-        this.authUser = this.auth.user;
-        this.syncUserData();
-        window.location.reload();
-      });
+      // Implement login logic (e.g., Google Auth)
     },
     logout() {
-      this.auth.logout().then(() => {
-        this.authUser = null;
-        this.lists = [];
+      // Implement logout logic
+    },
+    async fetchUserData() {
+      if (!this.authUser?.id) return;
+
+      const userDocRef = doc(db, "users", this.authUser.id);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        this.recipes = data.recipes || [];
+        this.lists = data.lists || [];
+      } else {
+        await setDoc(userDocRef, { recipes: [], lists: [] });
         this.recipes = [];
-      });
+        this.lists = [];
+      }
+      this.loading = false;
     },
     switchTab(tabId) {
       this.activeTab = tabId;
     },
-    syncUserData() {
-      this.lists = this.auth.lists.map(
-        (list) =>
-          new GroceryList(
-            list.name,
-            list.items.map((item) => ({
-              name: item.name,
-              unit: item.unit,
-            }))
-          )
-      );
-
-      this.recipes = this.auth.recipes.map(
-        (recipe) =>
-          new Recipe(
-            recipe.name,
-            recipe.ingredients.map((ingredient) => ({
-              name: ingredient.name,
-              unit: ingredient.unit,
-            })),
-            recipe.instructions
-          )
-      );
-    },
     addList(newList) {
-      this.auth.addList(newList);
-      this.syncUserData();
+      this.lists.push(newList);
     },
     deleteList(index) {
-      this.auth.deleteList(index);
-      this.syncUserData();
-    },
-    viewList(list) {
-      this.currentList = { ...list };
-      this.showViewListModal = true;
-    },
-    closeViewListModal() {
-      this.showViewListModal = false;
-    },
-    addItemToCurrentList(newItem) {
-      if (this.currentList && newItem) {
-        this.currentList.addItem(newItem);
-        this.syncUserData();
-      }
-    },
-    deleteItemFromCurrentList(index) {
-      if (this.currentList) {
-        this.currentList.removeItem(index);
-        this.syncUserData();
-      }
+      this.lists.splice(index, 1);
     },
     addRecipe(newRecipe) {
-      this.auth.addRecipe(newRecipe);
-      this.syncUserData();
+      this.recipes.push(newRecipe);
     },
-    deleteRecipe(index) {
-      this.auth.deleteRecipe(index);
-      this.syncUserData();
+    viewList(list) {
+      console.log("Viewing list: ", list); // Adjust as per your requirement
     },
-    viewRecipe(recipe) {
-      this.currentRecipe = { ...recipe };
-      this.showViewRecipeModal = true;
-    },
-    closeViewRecipeModal() {
-      this.showViewRecipeModal = false;
-    },
-    addIngredientToRecipe(ingredient) {
-      if (this.currentRecipe) {
-        this.currentRecipe.ingredients.push(ingredient);
-        this.syncUserData();
-      }
-    },
-    deleteIngredientFromRecipe(index) {
-      if (this.currentRecipe) {
-        this.currentRecipe.ingredients.splice(index, 1);
-        this.syncUserData();
-      }
-    },
-  },
-  created() {
-    this.auth._startSession();
-    setTimeout(() => {
-      this.authUser = this.auth.user;
-      this.syncUserData();
-      this.loading = false;
-    }, 1000);
   },
 };
 </script>
@@ -247,5 +151,42 @@ export default {
 <style scoped>
 #footer {
   background-color: var(--bs-secondary);
+}
+
+.skeleton-loader {
+  margin: 20px auto;
+  width: 60%;
+}
+
+.skeleton {
+  background-color: #e0e0e0;
+  height: 20px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  animation: pulse 1.5s infinite;
+}
+
+.skeleton-header {
+  height: 30px;
+  width: 50%;
+}
+
+.skeleton-paragraph {
+  height: 20px;
+  width: 100%;
+}
+
+@keyframes pulse {
+  0% {
+    background-color: #e0e0e0;
+  }
+
+  50% {
+    background-color: #f0f0f0;
+  }
+
+  100% {
+    background-color: #e0e0e0;
+  }
 }
 </style>

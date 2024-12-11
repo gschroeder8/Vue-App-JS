@@ -10,7 +10,8 @@
           <form @submit.prevent="addItemToList">
             <div class="mb-3">
               <label for="itemName" class="form-label">Item Name</label>
-              <input type="text" v-model="newItemName" class="form-control" id="itemName" placeholder="Enter item name" required>
+              <input type="text" v-model="newItemName" class="form-control" id="itemName" placeholder="Enter item name"
+                required>
             </div>
             <div class="mb-3">
               <label for="itemCategory" class="form-label">Category</label>
@@ -42,42 +43,43 @@
 </template>
 
 <script>
-import FoodItem from '@/models/FoodItem.js';
+import FoodItem from "@/models/FoodItem.js";
 
 export default {
-  name: 'ViewListModal',
+  name: "ViewListModal",
   props: {
     currentList: {
       type: Object,
       required: true,
-    }
+    },
   },
   data() {
     return {
-      newItemName: '',
-      newItemCategory: ''
+      newItemName: "",
+      newItemCategory: "",
     };
   },
   methods: {
-    addItemToList() {
-      if (this.newItemName.trim()) {
-        const newItem = new FoodItem(this.newItemName, this.newItemCategory);
-        this.$emit('add-item-to-list', newItem);
-        this.newItemName = '';
-        this.newItemCategory = '';
-      }
-    },
-    deleteItem(index) {
-      if (confirm("Are you sure you want to delete this item?")) {
-        this.$emit('delete-item-from-list', index);
-      }
-    },
-    closeModal() {
-      this.$emit('close-modal');
+  addItemToList() {
+    if (this.newItemName.trim()) {
+      const newItem = new FoodItem(this.newItemName, this.newItemCategory || "Miscellaneous");
+      this.$emit("add-item-to-list", newItem);
+      this.newItemName = "";
+      this.newItemCategory = "";
     }
-  }
+  },
+  deleteItem(index) {
+    if (confirm("Are you sure you want to delete this item?")) {
+      this.$emit("delete-item-from-list", index);
+    }
+  },
+  closeModal() {
+    this.$emit("close-modal");
+  },
+},
 };
+
+
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
