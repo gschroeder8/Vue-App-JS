@@ -115,9 +115,6 @@ export default {
   logout: { type: Function, required: true },
   authUser: { type: Object, default: null },
 },
-created() {
-  console.log("Logout function:", this.logout);
-}
 };
 </script>
 

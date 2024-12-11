@@ -1,7 +1,7 @@
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { auth, authProvider, db } from "@/models/firebase.js";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { signOut } from "firebase/auth";
+// import { signOut } from "firebase/auth";
 import GroceryList from "@/models/GroceryList.js";
 import ManualRecipe from "@/models/ManualRecipe.js";
 import APIRecipe from "@/models/APIRecipe.js";
@@ -38,17 +38,17 @@ export default class Auth {
       });
   }
 
-  async logout() {
-    try {
-      await signOut(auth);
-      this.authUser = null; // Clear the user from the app state
-      this.lists = []; // Reset any user-specific data
-      this.recipes = [];
-      console.log("User logged out successfully.");
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
-  }
+  // async logout() {
+  //   try {
+  //     await signOut(auth); 
+  //     this.authUser = null; 
+  //     this.lists = []; 
+  //     this.recipes = [];
+  //     console.log("User logged out successfully.");
+  //   } catch (error) {
+  //     console.error("Error during logout:", error);
+  //   }
+  // }
 
   _startSession() {
     onAuthStateChanged(auth, (firebaseUser) => {

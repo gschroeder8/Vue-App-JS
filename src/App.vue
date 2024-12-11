@@ -30,23 +30,29 @@
       <div class="container mt-4">
         <!-- Lists Tab -->
         <list-component v-if="activeTab === 'lists'" :lists="lists" @add-list="addList" @delete-list="deleteList"
-          @view-list="viewList">
-        </list-component>
+          @view-list="viewList"></list-component>
         <p v-if="activeTab === 'lists' && lists.length === 0" class="text-center text-muted">
           No lists created. Start by adding your first list!
         </p>
 
         <!-- Recipes Tab -->
-        <recipe-component v-if="activeTab === 'recipes'" :recipes="recipes" :lists="lists" :user-id="authUser?.id"
-          :apiKey="apiKey" @add-recipe="addRecipe" @refresh-data="fetchUserData">
-        </recipe-component>
+        <recipe-component v-if="activeTab === 'recipes'" :recipes="recipes" :lists="lists" :user-id="authUser?.id" />
         <p v-if="activeTab === 'recipes' && recipes.length === 0" class="text-center text-muted">
           No recipes added. Start by creating your first recipe!
         </p>
 
         <!-- Settings Tab -->
-        <settings-component v-if="activeTab === 'settings'" :login="login" :logout="logout" :auth-user="authUser">
-        </settings-component>
+        <settings-component v-if="activeTab === 'settings'" :login="login" :logout="logout"
+          :auth-user="authUser"></settings-component>
+
+        <!-- Add API Recipe Modal -->
+        <add-api-recipe v-if="showApiRecipeModal" :api-key="apiKey" :user-id="authUser.id" @add-recipe="addRecipe"
+          @close-modal="closeApiRecipeModal" />
+
+        <!-- View Recipe Modal -->
+        <view-recipe-modal v-if="showViewRecipeModal" :current-recipe="currentRecipe"
+          @close-modal="closeViewRecipeModal" @add-ingredient-to-recipe="addIngredientToRecipe"
+          @delete-ingredient-from-recipe="deleteIngredientFromRecipe"></view-recipe-modal>
       </div>
 
       <!-- Footer -->
@@ -75,17 +81,16 @@ export default {
   },
   data() {
     return {
-      authUser: null,
-      recipes: [],
-      lists: [],
-      apiKey: "1220a6ebd1cf4ccf9c6bd451a882b6ea", // API key for Spoonacular
-      loading: true,
-      activeTab: "lists",
+      activeTab: "lists", // Default tab
       tabs: [
         { id: "lists", label: "Lists" },
         { id: "recipes", label: "Recipes" },
         { id: "settings", label: "Settings" },
       ],
+      authUser: null,
+      recipes: [],
+      lists: [],
+      loading: true,
     };
   },
   created() {
@@ -106,11 +111,8 @@ export default {
     });
   },
   methods: {
-    login() {
-      // Implement login logic (e.g., Google Auth)
-    },
-    logout() {
-      // Implement logout logic
+    switchTab(tabId) {
+      this.activeTab = tabId;
     },
     async fetchUserData() {
       if (!this.authUser?.id) return;
@@ -129,20 +131,34 @@ export default {
       }
       this.loading = false;
     },
-    switchTab(tabId) {
-      this.activeTab = tabId;
-    },
     addList(newList) {
       this.lists.push(newList);
+      this.updateUserLists();
     },
     deleteList(index) {
       this.lists.splice(index, 1);
+      this.updateUserLists();
     },
     addRecipe(newRecipe) {
       this.recipes.push(newRecipe);
+      this.updateUserRecipes();
     },
-    viewList(list) {
-      console.log("Viewing list: ", list); // Adjust as per your requirement
+    async updateUserLists() {
+      if (!this.authUser?.id) return;
+      const userDocRef = doc(db, "users", this.authUser.id);
+      await setDoc(userDocRef, { lists: this.lists }, { merge: true });
+    },
+    async updateUserRecipes() {
+      if (!this.authUser?.id) return;
+      const userDocRef = doc(db, "users", this.authUser.id);
+      await setDoc(userDocRef, { recipes: this.recipes }, { merge: true });
+    },
+    logout() {
+      auth.signOut().then(() => {
+        this.authUser = null;
+        this.recipes = [];
+        this.lists = [];
+      });
     },
   },
 };
